@@ -293,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
                                             alarmManager.setRepeating(
                                                     AlarmManager.RTC_WAKEUP,
                                                     System.currentTimeMillis(),
-                                                    1000 * 60 * 5,
+                                                    1000 * 60 * 12,
                                                     pendingIntent);
                                             progressDialog.dismiss();
                                             load();

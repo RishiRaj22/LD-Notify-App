@@ -8,5 +8,5 @@ With love to the LD community.
 
 ## Contributing
 I will be more than happy if you decide to contribute and/or fork my repo and make something
-awesome out of it. I will love seeing this
+awesome out of it. I will love seeing some feedback or stars from you guys
 
