@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
             initGameLoader(prefs.getString("link", null));
             return;
         }
-        Log.d("PREFS", node + " " + note + " " + vx + " Game #" + gameno);
+        Log.d("PREFS_main", node + " " + note + " " + vx + " Game #" + gameno);
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
@@ -153,7 +153,6 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                     recyclerAdapter = new MyRecyclerAdapter(commentDatas);
                                     recyclerView.setAdapter(recyclerAdapter);
-                                    progressDialog.hide();
                                     editor.putInt("comments", commentDatas.size());
                                     editor.commit();
                                 } catch (JSONException e) {
@@ -181,24 +180,25 @@ public class MainActivity extends AppCompatActivity {
                                     jsonObject = jsonObject.getJSONObject("magic");
                                     double grade = jsonObject.getDouble("grade");
                                     SharedPreferences.Editor editor = prefs.edit();
-                                    if (grade > prefs.getFloat("grade", 0)) {
-                                        editor.putFloat("grade", (float) grade);
+                                    if (grade > prefs.getFloat("addedGradings", 0)) {
+                                        editor.putFloat("addedGradings", (float) grade);
                                         editor.commit();
                                         rating.setText(
                                                 "Rating: " + String.valueOf(grade).concat(" !"));
                                     } else
                                         rating.setText(
                                                 "Rating: " + String.valueOf(grade));
+                                    progressDialog.dismiss();
                                 } catch (JSONException e) {
                                     e.printStackTrace();
-                                    progressDialog.hide();
+                                    progressDialog.dismiss();
                                     Toast.makeText(MainActivity.this, "Error!", Toast.LENGTH_SHORT);
                                 }
                             }
                         }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        progressDialog.hide();
+                        progressDialog.dismiss();
                         Toast.makeText(MainActivity.this, "Error!", Toast.LENGTH_SHORT);
                     }
                 });
@@ -280,7 +280,8 @@ public class MainActivity extends AppCompatActivity {
                                             editor.putInt("gameno", gameno);
                                             editor.apply();
                                             AlarmManager alarmManager = (AlarmManager)
-                                                    getSystemService(ALARM_SERVICE);
+                                                    getApplicationContext().
+                                            getSystemService(ALARM_SERVICE);
                                             PendingIntent pendingIntent = PendingIntent
                                                     .getBroadcast(
                                                             MainActivity.this,
@@ -288,15 +289,17 @@ public class MainActivity extends AppCompatActivity {
                                                             new Intent(
                                                                     MainActivity.this,
                                                                     NotificationTimer.class),
-                                                            PendingIntent.FLAG_ONE_SHOT);
-                                            alarmManager.setInexactRepeating(
+                                                            PendingIntent.FLAG_UPDATE_CURRENT);
+                                            alarmManager.setRepeating(
                                                     AlarmManager.RTC_WAKEUP,
                                                     System.currentTimeMillis(),
-                                                    1000 * 60 * 10,
+                                                    1000 * 60 * 5,
                                                     pendingIntent);
+                                            progressDialog.dismiss();
                                             load();
                                         } catch (JSONException e) {
                                             //// TODO: 07-08-2017 Check URL or raise ticket
+                                            progressDialog.dismiss();
                                             e.printStackTrace();
                                             editor.apply();
                                         }
@@ -305,6 +308,7 @@ public class MainActivity extends AppCompatActivity {
                                 new Response.ErrorListener() {
                                     @Override
                                     public void onErrorResponse(VolleyError error) {
+                                        progressDialog.dismiss();
                                         //// TODO: 07-08-2017 Check URL or raise ticket
                                         if (error == null)
                                             Log.d("RESPONSE_ENTRIES", "Fatal error");
@@ -320,9 +324,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.e("QUARK_BACKEND", "Quark backend not working");
+                progressDialog.dismiss();
                 // TODO: 07-08-2017 Ask user to raise a github issue for backend not working
             }
         });
+
+        progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
         progressDialog.setMessage("Loading");
         progressDialog.show();
@@ -330,7 +337,6 @@ public class MainActivity extends AppCompatActivity {
         nodeRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
 
         queue.add(nodeRequest);
-        progressDialog.dismiss();
     }
 
     @OnClick(R.id.edit_button)

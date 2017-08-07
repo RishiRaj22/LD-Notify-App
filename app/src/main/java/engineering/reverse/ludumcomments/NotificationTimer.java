@@ -11,7 +11,6 @@ import android.media.RingtoneManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -31,6 +30,7 @@ import java.util.ArrayList;
 public class NotificationTimer extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, Intent intent) {
+        Log.d("NOTIFICATION","timer called");
         RequestQueue queue;
         queue = Volley.newRequestQueue(context.getApplicationContext());
         final ArrayList<CommentData> commentDatas = new ArrayList<CommentData>();
@@ -67,6 +67,9 @@ public class NotificationTimer extends BroadcastReceiver {
                                     int newComments = jsonArray.length();
                                     if (newComments > comments)
                                         data.addedComments = newComments - comments;
+                                    Log.d("NOTIF_requests","Note request ran succsessfuly" + data.addedComments);
+                                    addNotification(context.getApplicationContext(), data);
+
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                 }
@@ -89,9 +92,10 @@ public class NotificationTimer extends BroadcastReceiver {
                                     JSONObject jsonObjecter = jsonArray.getJSONObject(0);
                                     jsonObjecter = jsonObjecter.getJSONObject("magic");
                                     double grade = jsonObjecter.getDouble("grade");
-                                    if (grade > prefs.getFloat("grade", 0)) {
-                                        data.grade = grade;
+                                    if (grade > prefs.getFloat("addedGradings", 0)) {
+                                        data.addedGradings = grade - prefs.getFloat("addedGradings",0);
                                     }
+                                    Log.d("NOTIF_requests","Node request ran succsessfuly" + data.addedGradings);
                                     addNotification(context.getApplicationContext(), data);
                                 } catch (JSONException e) {
                                     e.printStackTrace();
@@ -106,6 +110,7 @@ public class NotificationTimer extends BroadcastReceiver {
 
         noteRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
         nodeRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
+        Log.d("NOTIF_requests","Requests queued successuly");
 
         queue.add(noteRequest);
         queue.add(nodeRequest);
@@ -115,16 +120,22 @@ public class NotificationTimer extends BroadcastReceiver {
         String commentText = "", gradeText = "";
         String notifText = "";
         if (data.addedComments > 0)
-            commentText = data.addedComments + " new comments and ";
-        if (data.grade > 0)
-            gradeText = data.grade + " ratings";
-        if (commentText == null && gradeText == null)
+            commentText = data.addedComments + " new comments";
+        if (data.addedGradings > 0)
+            gradeText = data.addedGradings + " new ratings";
+        Log.d("NOTIFICATION","" + System.currentTimeMillis());
+        Log.d("NOTIFICATION","NOTIF: " + commentText + gradeText);
+
+        if (commentText.equals("") && gradeText.equals(""))
             return;
-        notifText = commentText + gradeText + " received!";
+        else if(!commentText.equals("") && !gradeText.equals(""))
+            notifText = commentText +" & " + gradeText + " received!";
+        else notifText = commentText + gradeText + " received!";
+
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
                 .setContentTitle("Updates on your LD entry")
                 .setContentText(notifText)
-                .setSmallIcon(R.mipmap.ic_launcher_round)
+                .setSmallIcon(R.drawable.ic_notif)
                 .setPriority(Notification.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setCategory(Notification.CATEGORY_SOCIAL)
@@ -148,6 +159,6 @@ public class NotificationTimer extends BroadcastReceiver {
 
     class Data {
         int addedComments = -1;
-        double grade = -1;
+        double addedGradings = -1;
     }
 }

@@ -12,7 +12,7 @@ public class VolleyUtils extends DefaultRetryPolicy {
     public static RetryPolicy getRetryPolicy() {
         if(policy == null) {
             policy = new DefaultRetryPolicy(
-                    6500,
+                    10000,
                     2,
                     DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
         }
