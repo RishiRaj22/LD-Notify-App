@@ -6,8 +6,8 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -104,9 +104,9 @@ public class MainActivity extends AppCompatActivity {
         enterDataLayout.setVisibility(View.GONE);
         commentDatas = new ArrayList<CommentData>();
 
-        String vx = prefs.getString("vx", null);
+        final String vx = prefs.getString("vx", null);
         final String note = prefs.getString("note", null);
-        String node = prefs.getString("node", null);
+        final String node = prefs.getString("node", null);
         int gameno = prefs.getInt("gameno", -1);
         if (vx == null || note == null || node == null || gameno == -1) {
             Log.d("PREFS", "Values not loaded from prefs. Fatal error");
@@ -136,20 +136,80 @@ public class MainActivity extends AppCompatActivity {
                                     JSONArray jsonArray = response.getJSONArray(note);
                                     SharedPreferences.Editor editor = prefs.edit();
                                     int comments = prefs.getInt("comments", -1);
+                                    ArrayList<Integer> authors = new ArrayList<>();
+
                                     for (int i = 0; i < jsonArray.length(); i++) {
                                         JSONObject jsonObject = jsonArray.getJSONObject(i);
+                                        int author = jsonObject.getInt("author");
+                                        if(!authors.contains(author)) {
+                                            Log.d("REQUEST_AUTHOR","New author " + author + " added");
+                                            authors.add(author);
+                                        }
+
                                         if (i > comments)
                                             commentDatas.add(
                                                     new CommentData(
+                                                            author,
                                                             jsonObject.getString("body"),
                                                             String.valueOf(i + 1).concat(" !"),
                                                             jsonObject.getString("modified")));
                                         else
                                             commentDatas.add(
                                                     new CommentData(
+                                                            author,
                                                             jsonObject.getString("body"),
                                                             String.valueOf(i + 1),
                                                             jsonObject.getString("modified")));
+                                    }
+                                    if (comments != 0) {
+                                        Log.d("REQUEST", "Author request to be executed");
+                                        int len = authors.size();
+                                        for (int i = 0; i < len; i += 30) {
+                                            StringBuilder authorSearch = new StringBuilder("https://api.ldjam.com/" + vx + "/" + node + "/get/" + authors.get(i));
+                                            for (int j = 1; j < 30 && (i + j) < len; j++) {
+                                                authorSearch.append('+');
+                                                authorSearch.append(authors.get(i + j));
+                                            }
+                                            String requestUrl = authorSearch.toString();
+                                            Log.d("REQUEST_AUTHOR", requestUrl);
+                                            JsonObjectRequest authorsRequest = new JsonObjectRequest(
+                                                    requestUrl,
+                                                    null,
+                                                    new Response.Listener<JSONObject>() {
+                                                        @Override
+                                                        public void onResponse(JSONObject response) {
+                                                            try {
+                                                                JSONArray jsonArray = response.getJSONArray(node);
+                                                                long time = System.currentTimeMillis();
+                                                                for (int i = 0; i < jsonArray.length(); i++) {
+                                                                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                                                                    int id = jsonObject.getInt("id");
+                                                                    String name = jsonObject.getString("name");
+                                                                    for (CommentData data : commentDatas) {
+                                                                        if (data.getId() == id) {
+                                                                            data.setName(name);
+                                                                            Log.d("REQUEST_AUTHOR",name);
+                                                                        }
+                                                                    }
+                                                                    //Highly inefficient n^2 algo
+                                                                }
+                                                                long timeEnd = System.currentTimeMillis();
+                                                                Log.d("COMMENTER_NAME", "Processing took " + (timeEnd - time) + "ms");
+                                                                recyclerAdapter.notifyDataSetChanged();
+                                                                recyclerView.refreshDrawableState();
+                                                            } catch (JSONException ex) {
+                                                                ex.printStackTrace();
+                                                            }
+
+                                                        }
+                                                    }, new Response.ErrorListener() {
+                                                @Override
+                                                public void onErrorResponse(VolleyError error) {
+
+                                                }
+                                            });
+                                            queue.add(authorsRequest);
+                                        }
                                     }
                                     recyclerAdapter = new MyRecyclerAdapter(commentDatas);
                                     recyclerView.setAdapter(recyclerAdapter);
@@ -216,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
         initGameLoader(link);
     }
 
-    private void initGameLoader(String link) {
+    private void initGameLoader(final String link) {
         if (link == null) return;
         int pos = -1, len = link.length();
         for (int i = 0; i < len - 11; i++) {
@@ -278,10 +338,11 @@ public class MainActivity extends AppCompatActivity {
 
                                             int gameno = response.getInt("node");
                                             editor.putInt("gameno", gameno);
+                                            editor.putString("link", link);
                                             editor.apply();
                                             AlarmManager alarmManager = (AlarmManager)
                                                     getApplicationContext().
-                                            getSystemService(ALARM_SERVICE);
+                                                            getSystemService(ALARM_SERVICE);
                                             PendingIntent pendingIntent = PendingIntent
                                                     .getBroadcast(
                                                             MainActivity.this,
@@ -348,6 +409,15 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.fab)
     public void onFabClicked() {
         load();
+    }
+
+    @OnClick(R.id.web_button)
+    public void onWebClicked() {
+        String url = prefs.getString("link", "https://hastebin.com/raw/wofebayapa");
+        if (!url.startsWith("http"))
+            url = "https://" + url;
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(browserIntent);
     }
 
     @Override
