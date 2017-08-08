@@ -1,9 +1,13 @@
 package engineering.reverse.ludumcomments;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import org.ocpsoft.prettytime.PrettyTime;
@@ -16,6 +20,7 @@ import java.util.TimeZone;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import us.feras.mdv.MarkdownView;
 
 /**
@@ -23,9 +28,9 @@ import us.feras.mdv.MarkdownView;
  */
 
 public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.CommentHolder> {
-    private ArrayList<CommentData> commentDatas;
     SimpleDateFormat dateFormat;
     PrettyTime prettyTime;
+    private ArrayList<CommentData> commentDatas;
 
     public MyRecyclerAdapter(ArrayList<CommentData> commentDatas) {
         dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'kk:mm:ss'Z'");
@@ -44,12 +49,16 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.Co
     @Override
     public void onBindViewHolder(CommentHolder holder, int position) {
         CommentData commentData = commentDatas.get(commentDatas.size() - 1 - position);
-        if(commentData.getComment() != null)
+        if (commentData.getComment() != null)
             holder.comment.loadMarkdown(commentData.getComment());
-        if(commentData.getLove() != null)
+        if (commentData.getLove() != null)
             holder.love.setText(commentData.getLove());
-        if(commentData.getName() != null)
+        if (commentData.getName() != null)
             holder.authorName.setText(commentData.getName());
+        if (commentData.getBody() != null && commentData.getBody().length() > 0) {
+            holder.authorBody.loadMarkdown("## About " + commentData.getName() + "\n" + commentData.getBody(), "file:///android_asset/style.css");
+            holder.bodyExpandButton.setVisibility(View.VISIBLE);
+        }
         Date date = null;
         try {
             date = dateFormat.parse(commentData.getTime());
@@ -74,10 +83,30 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.Co
         TextView love;
         @BindView(R.id.time)
         TextView time;
+        @BindView(R.id.expand_author)
+        ImageButton bodyExpandButton;
+        @BindView(R.id.body_author)
+        MarkdownView authorBody;
+        boolean expanded;
+        Context context;
 
         public CommentHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
+            context = itemView.getContext();
+        }
+
+        @OnClick(R.id.expand_author)
+        public void onExpandClicked() {
+            expanded = !expanded;
+            if (expanded) authorBody.setVisibility(View.VISIBLE);
+            else authorBody.setVisibility(View.GONE);
+        }
+
+        @OnClick(R.id.author_metadata)
+        public void onNameClicked() {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(commentDatas.get(getAdapterPosition()).getPath()));
+            context.startActivity(browserIntent);
         }
     }
 }

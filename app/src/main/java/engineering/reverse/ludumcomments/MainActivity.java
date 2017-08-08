@@ -141,8 +141,8 @@ public class MainActivity extends AppCompatActivity {
                                     for (int i = 0; i < jsonArray.length(); i++) {
                                         JSONObject jsonObject = jsonArray.getJSONObject(i);
                                         int author = jsonObject.getInt("author");
-                                        if(!authors.contains(author)) {
-                                            Log.d("REQUEST_AUTHOR","New author " + author + " added");
+                                        if (!authors.contains(author)) {
+                                            Log.d("REQUEST_AUTHOR", "New author " + author + " added");
                                             authors.add(author);
                                         }
 
@@ -164,6 +164,8 @@ public class MainActivity extends AppCompatActivity {
                                     if (comments != 0) {
                                         Log.d("REQUEST", "Author request to be executed");
                                         int len = authors.size();
+                                        //There is a limit of about 30 - 50 nodes in one query
+                                        //So, dividing it into multiple queries
                                         for (int i = 0; i < len; i += 30) {
                                             StringBuilder authorSearch = new StringBuilder("https://api.ldjam.com/" + vx + "/" + node + "/get/" + authors.get(i));
                                             for (int j = 1; j < 30 && (i + j) < len; j++) {
@@ -182,14 +184,22 @@ public class MainActivity extends AppCompatActivity {
                                                                 JSONArray jsonArray = response.getJSONArray(node);
                                                                 long time = System.currentTimeMillis();
                                                                 for (int i = 0; i < jsonArray.length(); i++) {
-                                                                    JSONObject jsonObject = jsonArray.getJSONObject(i);
-                                                                    int id = jsonObject.getInt("id");
-                                                                    String name = jsonObject.getString("name");
-                                                                    for (CommentData data : commentDatas) {
-                                                                        if (data.getId() == id) {
-                                                                            data.setName(name);
-                                                                            Log.d("REQUEST_AUTHOR",name);
+                                                                    try {
+                                                                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                                                                        int id = jsonObject.getInt("id");
+                                                                        String name = jsonObject.getString("name");
+                                                                        String body = jsonObject.getString("body");
+                                                                        String path = jsonObject.getString("path");
+                                                                        for (CommentData data : commentDatas) {
+                                                                            if (data.getId() == id) {
+                                                                                data.setName(name);
+                                                                                data.setBody(body);
+                                                                                data.setPath("https://ldjam.com" + path);
+                                                                                Log.d("REQUEST_AUTHOR", name);
+                                                                            }
                                                                         }
+                                                                    } catch (JSONException exception) {
+                                                                        exception.printStackTrace();
                                                                     }
                                                                     //Highly inefficient n^2 algo
                                                                 }
