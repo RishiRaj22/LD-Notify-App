@@ -40,14 +40,3 @@ build/
 captures/
 
 \.idea/
-
-app/app-release\.apk
-.gitignore
-.idea/
-app/
-build.gradle
-gradle.properties
-gradle/
-gradlew
-gradlew.bat
-settings.gradle
