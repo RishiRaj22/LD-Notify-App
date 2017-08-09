@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,12 +28,12 @@ import us.feras.mdv.MarkdownView;
  * Created by cogito on 7/31/17.
  */
 
-public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.CommentHolder> {
-    SimpleDateFormat dateFormat;
-    PrettyTime prettyTime;
+class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.CommentHolder> {
+    private SimpleDateFormat dateFormat;
+    private PrettyTime prettyTime;
     private ArrayList<CommentData> commentDatas;
 
-    public MyRecyclerAdapter(ArrayList<CommentData> commentDatas) {
+    MyRecyclerAdapter(ArrayList<CommentData> commentDatas) {
         dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'kk:mm:ss'Z'");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         prettyTime = new PrettyTime();
@@ -42,24 +43,27 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.Co
     @Override
     public CommentHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.comment_card, parent, false);
-        CommentHolder c = new CommentHolder(v);
-        return c;
+        return new CommentHolder(v);
     }
 
     @Override
     public void onBindViewHolder(CommentHolder holder, int position) {
+        position = holder.getAdapterPosition();
+        holder.bodyExpandButton.setVisibility(View.INVISIBLE);
+        holder.authorBody.setVisibility(View.GONE);
         CommentData commentData = commentDatas.get(commentDatas.size() - 1 - position);
         if (commentData.getComment() != null)
             holder.comment.loadMarkdown(commentData.getComment());
         if (commentData.getLove() != null)
             holder.love.setText(commentData.getLove());
-        if (commentData.getName() != null)
+        if (commentData.getName() != null) {
             holder.authorName.setText(commentData.getName());
+        }
         if (commentData.getBody() != null && commentData.getBody().length() > 0) {
             holder.authorBody.loadMarkdown("## About " + commentData.getName() + "\n" + commentData.getBody(), "file:///android_asset/style.css");
             holder.bodyExpandButton.setVisibility(View.VISIBLE);
         }
-        Date date = null;
+        Date date;
         try {
             date = dateFormat.parse(commentData.getTime());
             holder.time.setText(prettyTime.format(date));
@@ -90,7 +94,7 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.Co
         boolean expanded;
         Context context;
 
-        public CommentHolder(View itemView) {
+        CommentHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
             context = itemView.getContext();
@@ -105,7 +109,7 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.Co
 
         @OnClick(R.id.author_metadata)
         public void onNameClicked() {
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(commentDatas.get(getAdapterPosition()).getPath()));
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(commentDatas.get(commentDatas.size() - 1 - getAdapterPosition()).getPath()));
             context.startActivity(browserIntent);
         }
     }
