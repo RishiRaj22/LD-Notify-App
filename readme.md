@@ -1,6 +1,6 @@
 # Ludum Dare notify App
 
-[![Get it on Play Store](https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png)](https://play.google.com/store/apps/details?id=engineering.reverse.ludumcomments&utm_source=github&&pcampaignid=readme)
+[![Get it on Play Store](https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png)](https://play.google.com/store/apps/details?id=engineering.reverse.ludumcomments&utm_source=github&pcampaignid=readme)
 
 ## Introduction
 This is an app to keep you notified about any new comment or rating that your LD entry gets.
