@@ -27,7 +27,7 @@
                 android:id="@+id/game_name_set"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="https://ldjam.com/events/ludum-dare/39/battery-low" />
+                android:hint="https://ldjam.com/events/ludum-dare/46/manage-the-ongoing-situation" />
 
             <Button
                 android:id="@+id/submit_button"
