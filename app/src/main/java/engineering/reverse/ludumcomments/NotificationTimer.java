@@ -29,6 +29,8 @@ import java.util.ArrayList;
  */
 
 public class NotificationTimer extends BroadcastReceiver {
+    private final float epsilon=0.00001f; //account for floating point errors when subtracting addedratings
+
     @Override
     public void onReceive(final Context context, Intent intent) {
         Log.d("NOTIFICATION","timer called");
@@ -93,7 +95,7 @@ public class NotificationTimer extends BroadcastReceiver {
                                     JSONObject jsonObjecter = jsonArray.getJSONObject(0);
                                     jsonObjecter = jsonObjecter.getJSONObject("magic");
                                     double grade = jsonObjecter.getDouble("grade");
-                                    if (grade > prefs.getFloat("addedGradings", 0)) {
+                                    if (grade - prefs.getFloat("addedGradings", 0)>epsilon) {
                                         data.addedGradings = grade - prefs.getFloat("addedGradings",0);
                                     }
                                     Log.d("NOTIF_requests","Node request ran succsessfuly" + data.addedGradings);
