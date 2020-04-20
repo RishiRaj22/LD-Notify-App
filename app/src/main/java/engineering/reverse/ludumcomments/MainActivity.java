@@ -8,9 +8,6 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -18,11 +15,15 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -119,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
         progressDialog.setCancelable(false);
         progressDialog.setMessage("Loading");
         progressDialog.show();
-        String noteUrl = "https://api.ldjam.com/" + vx + "/" + note + "/get/" + gameno;
+        String noteUrl = "https://api.ldjam.com/" + vx + "/" + note + "/getbynode/" + gameno;
         String nodeUrl = "https://api.ldjam.com/" + vx + "/" + node + "/get/" + gameno;
 
         Log.d("LOAD", noteUrl);
@@ -133,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onResponse(JSONObject response) {
                                 try {
-                                    JSONArray jsonArray = response.getJSONArray(note);
+                                    JSONArray jsonArray = response.getJSONArray("note");
                                     SharedPreferences.Editor editor = prefs.edit();
                                     int comments = prefs.getInt("comments", -1);
                                     ArrayList<Integer> authors = new ArrayList<>();
@@ -181,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
                                                         @Override
                                                         public void onResponse(JSONObject response) {
                                                             try {
-                                                                JSONArray jsonArray = response.getJSONArray(node);
+                                                                JSONArray jsonArray = response.getJSONArray("node");
                                                                 long time = System.currentTimeMillis();
                                                                 for (int i = 0; i < jsonArray.length(); i++) {
                                                                     try {
@@ -301,13 +302,14 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         final String relativeLink = link.substring(pos);
-        String newNodeUrl = "https://quarkbackend.com/getfile/rishiraj22/state";
+        /*String newNodeUrl = "https://quarkbackend.com/getfile/rishiraj22/state";
         JsonObjectRequest nodeRequest = new JsonObjectRequest(newNodeUrl, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                String node = "node", note = "note", vx = "vx";
+          */
+                String node = "node2", note = "comment", vx = "vx";
                 String root;
-                try {
+                /*try {
                     node = response.getString("node");
                     note = response.getString("note");
                     vx = response.getString("vx");
@@ -316,17 +318,17 @@ public class MainActivity extends AppCompatActivity {
                     node = "node";
                     note = "note";
                     vx = "vx";
-                }
+                }*/
                 final SharedPreferences.Editor editor = prefs.edit();
                 editor.putString("node", node);
                 editor.putString("note", note);
                 editor.putString("vx", vx);
                 root = "https://api.ldjam.com/" + vx + "/node/walk/1";
 
-                int len = relativeLink.length();
+                int lenRel = relativeLink.length();
                 String nodeLink = null;
 
-                Log.d("VOLLEY_REQ", relativeLink + " Length: " + len);
+                Log.d("VOLLEY_REQ", relativeLink + " Length: " + lenRel);
                 nodeLink = root + relativeLink;
 
                 Log.d("VOLLEY_REQ", "Link " + nodeLink);
@@ -390,7 +392,7 @@ public class MainActivity extends AppCompatActivity {
 
                 gameNoRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
                 queue.add(gameNoRequest);
-            }
+            /*}
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
@@ -398,16 +400,16 @@ public class MainActivity extends AppCompatActivity {
                 progressDialog.dismiss();
                 // TODO: 07-08-2017 Ask user to raise a github issue for backend not working
             }
-        });
+        });*/
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
         progressDialog.setMessage("Loading");
         progressDialog.show();
 
-        nodeRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
+        //nodeRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
 
-        queue.add(nodeRequest);
+        //queue.add(nodeRequest);
     }
 
     @OnClick(R.id.edit_button)
@@ -423,7 +425,8 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.web_button)
     public void onWebClicked() {
-        String url = prefs.getString("link", "https://hastebin.com/raw/wofebayapa");
+        //String url = prefs.getString("link", "https://hastebin.com/raw/wofebayapa");
+        String url = prefs.getString("link", "https://ldjam.com/");
         if (!url.startsWith("http"))
             url = "https://" + url;
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
