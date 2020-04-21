@@ -1,13 +1,20 @@
 package engineering.reverse.ludumcomments;
 
 import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -16,6 +23,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.RequestQueue;
@@ -68,8 +77,56 @@ public class MainActivity extends AppCompatActivity {
         if (gameno == -1)
             return;
 
+        Log.d("NOTIFICATION", "starting");
+
         load();
+
+        /*createNotificationChannel();
+
+        //test notification
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), "234")
+                .setContentTitle("Updates on your LD entry")
+                .setContentText("test test test")
+                .setSmallIcon(R.drawable.ic_notif)
+                .setPriority(Notification.PRIORITY_HIGH)
+               // .setAutoCancel(true)
+               // .setCategory(Notification.CATEGORY_SOCIAL)
+                .setSound(
+                        RingtoneManager.getActualDefaultRingtoneUri(
+                                getApplicationContext(), RingtoneManager.TYPE_NOTIFICATION));
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        PendingIntent resultPendingIntent = PendingIntent.
+                getActivity(
+                        getApplicationContext(),
+                        12,
+                        intent,
+                        PendingIntent.FLAG_ONE_SHOT);
+        notificationBuilder.setContentIntent(resultPendingIntent);
+        NotificationManagerCompat manager = NotificationManagerCompat.from(getApplicationContext());
+        *//*NotificationManager manager = (NotificationManager) getApplicationContext().
+                getSystemService(
+                        Context.NOTIFICATION_SERVICE);
+        */
+        /*Log.d("NOTIFICATION", "manager: "+manager);
+        manager.notify(234,notificationBuilder.build());
+
+        Log.d("NOTIFICATION", "test completed");*/
     }
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.channel_name);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("234", name, importance);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
 
     @Override
     protected void onPause() {
@@ -366,8 +423,10 @@ public class MainActivity extends AppCompatActivity {
                                             alarmManager.setRepeating(
                                                     AlarmManager.RTC_WAKEUP,
                                                     System.currentTimeMillis(),
-                                                    1000 * 60 * 12,
+                                                    1000 * 60 * 10,
                                                     pendingIntent);
+
+                                            //alarmManager.set(AlarmManager.RTC_WAKEUP, 5000, pendingIntent);
                                             progressDialog.dismiss();
                                             load();
                                         } catch (JSONException e) {

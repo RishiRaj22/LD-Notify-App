@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 /**
  * @author Rishi Raj
@@ -15,7 +16,6 @@ public class RefreshNotificationsReciever extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-
         SharedPreferences prefs = context.getSharedPreferences("data", Context.MODE_PRIVATE);
 
         int gameno = prefs.getInt("gameno",-1);
@@ -34,7 +34,7 @@ public class RefreshNotificationsReciever extends BroadcastReceiver {
         alarmManager.setRepeating(
                 AlarmManager.RTC_WAKEUP,
                 System.currentTimeMillis(),
-                1000 * 60 * 12,
+                1000 * 60 * 10,
                 pendingIntent);
     }
 }
