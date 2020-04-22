@@ -60,10 +60,6 @@ public class NotificationTimer extends BroadcastReceiver {
         Log.d("LOAD", nodeUrl);
         final Data data = new Data();
 
-        //debug
-        //data.addedComments=10;
-        //addNotification(context.getApplicationContext(), data);
-
         JsonObjectRequest noteRequest =
                 new JsonObjectRequest(
                         noteUrl,

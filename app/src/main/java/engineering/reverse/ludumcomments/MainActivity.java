@@ -63,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<CommentData> commentDatas;
     private RequestQueue queue;
 
+    private final String vx="vx", node="node2", note="comment";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,51 +82,6 @@ public class MainActivity extends AppCompatActivity {
         Log.d("NOTIFICATION", "starting");
 
         load();
-
-        /*createNotificationChannel();
-
-        //test notification
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), "234")
-                .setContentTitle("Updates on your LD entry")
-                .setContentText("test test test")
-                .setSmallIcon(R.drawable.ic_notif)
-                .setPriority(Notification.PRIORITY_HIGH)
-               // .setAutoCancel(true)
-               // .setCategory(Notification.CATEGORY_SOCIAL)
-                .setSound(
-                        RingtoneManager.getActualDefaultRingtoneUri(
-                                getApplicationContext(), RingtoneManager.TYPE_NOTIFICATION));
-        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-        PendingIntent resultPendingIntent = PendingIntent.
-                getActivity(
-                        getApplicationContext(),
-                        12,
-                        intent,
-                        PendingIntent.FLAG_ONE_SHOT);
-        notificationBuilder.setContentIntent(resultPendingIntent);
-        NotificationManagerCompat manager = NotificationManagerCompat.from(getApplicationContext());
-        *//*NotificationManager manager = (NotificationManager) getApplicationContext().
-                getSystemService(
-                        Context.NOTIFICATION_SERVICE);
-        */
-        /*Log.d("NOTIFICATION", "manager: "+manager);
-        manager.notify(234,notificationBuilder.build());
-
-        Log.d("NOTIFICATION", "test completed");*/
-    }
-
-    private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = getString(R.string.channel_name);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel("234", name, importance);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
     }
 
 
@@ -135,43 +92,17 @@ public class MainActivity extends AppCompatActivity {
             progressDialog.dismiss();
     }
 
-    private void fetchNodeNames() {
-        String newNodeUrl = "https://quarkbackend.com/getfile/rishiraj22/state";
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(newNodeUrl, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                String node = "node", note = "note", vx = "vx";
-                try {
-                    node = response.getString("node");
-                    note = response.getString("note");
-                    vx = response.getString("vx");
-                } catch (JSONException e) {
-                    Log.e("QUARK_BACKEND", "Quark backend not working");
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("QUARK_BACKEND", "Quark backend not working");
-            }
-        });
-
-    }
-
     private void load() {
         enterDataLayout.setVisibility(View.GONE);
         commentDatas = new ArrayList<CommentData>();
 
-        final String vx = prefs.getString("vx", null);
-        final String note = prefs.getString("note", null);
-        final String node = prefs.getString("node", null);
         int gameno = prefs.getInt("gameno", -1);
-        if (vx == null || note == null || node == null || gameno == -1) {
+        if (gameno == -1) {
             Log.d("PREFS", "Values not loaded from prefs. Fatal error");
             initGameLoader(prefs.getString("link", null));
             return;
         }
-        Log.d("PREFS_main", node + " " + note + " " + vx + " Game #" + gameno);
+        Log.d("PREFS_main", "Game #" + gameno);
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
@@ -359,28 +290,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         final String relativeLink = link.substring(pos);
-        /*String newNodeUrl = "https://quarkbackend.com/getfile/rishiraj22/state";
-        JsonObjectRequest nodeRequest = new JsonObjectRequest(newNodeUrl, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-          */
-                String node = "node2", note = "comment", vx = "vx";
                 String root;
-                /*try {
-                    node = response.getString("node");
-                    note = response.getString("note");
-                    vx = response.getString("vx");
-                } catch (JSONException e) {
-                    Log.e("QUARK_BACKEND", "Quark backend not working");
-                    node = "node";
-                    note = "note";
-                    vx = "vx";
-                }*/
-                final SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("node", node);
-                editor.putString("note", note);
-                editor.putString("vx", vx);
-                root = "https://api.ldjam.com/" + vx + "/node/walk/1";
+              final SharedPreferences.Editor editor = prefs.edit();
+               root = "https://api.ldjam.com/" + vx + "/node/walk/1";
 
                 int lenRel = relativeLink.length();
                 String nodeLink = null;
@@ -426,7 +338,6 @@ public class MainActivity extends AppCompatActivity {
                                                     1000 * 60 * 10,
                                                     pendingIntent);
 
-                                            //alarmManager.set(AlarmManager.RTC_WAKEUP, 5000, pendingIntent);
                                             progressDialog.dismiss();
                                             load();
                                         } catch (JSONException e) {
@@ -451,24 +362,11 @@ public class MainActivity extends AppCompatActivity {
 
                 gameNoRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
                 queue.add(gameNoRequest);
-            /*}
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("QUARK_BACKEND", "Quark backend not working");
-                progressDialog.dismiss();
-                // TODO: 07-08-2017 Ask user to raise a github issue for backend not working
-            }
-        });*/
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
         progressDialog.setMessage("Loading");
         progressDialog.show();
-
-        //nodeRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
-
-        //queue.add(nodeRequest);
     }
 
     @OnClick(R.id.edit_button)
@@ -484,7 +382,6 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.web_button)
     public void onWebClicked() {
-        //String url = prefs.getString("link", "https://hastebin.com/raw/wofebayapa");
         String url = prefs.getString("link", "https://ldjam.com/");
         if (!url.startsWith("http"))
             url = "https://" + url;
