@@ -15,11 +15,10 @@ public class RefreshNotificationsReciever extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-
         SharedPreferences prefs = context.getSharedPreferences("data", Context.MODE_PRIVATE);
 
-        int gameno = prefs.getInt("gameno",-1);
-        if(gameno == -1)
+        int gameno = prefs.getInt("gameno", -1);
+        if (gameno == -1)
             return;
 
         AlarmManager alarmManager = (AlarmManager)
@@ -34,7 +33,7 @@ public class RefreshNotificationsReciever extends BroadcastReceiver {
         alarmManager.setRepeating(
                 AlarmManager.RTC_WAKEUP,
                 System.currentTimeMillis(),
-                1000 * 60 * 12,
+                1000 * 60 * 10,
                 pendingIntent);
     }
 }

@@ -1,6 +1,7 @@
 package engineering.reverse.ludumcomments;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -8,8 +9,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.RingtoneManager;
-import android.support.v4.app.NotificationCompat;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -28,9 +32,12 @@ import java.util.ArrayList;
  */
 
 public class NotificationTimer extends BroadcastReceiver {
+    private final float EPSILON = 0.00001f; //account for floating point errors when subtracting addedratings
+    private final String CHANNEL_ID = "ld_notify_channel"; //notification channel
+
     @Override
     public void onReceive(final Context context, Intent intent) {
-        Log.d("NOTIFICATION","timer called");
+        Log.d("NOTIFICATION", "timer called");
         RequestQueue queue;
         queue = Volley.newRequestQueue(context.getApplicationContext());
         final ArrayList<CommentData> commentDatas = new ArrayList<CommentData>();
@@ -46,7 +53,7 @@ public class NotificationTimer extends BroadcastReceiver {
         }
         Log.d("PREFS", node + " " + note + " " + vx + " Game #" + gameno);
 
-        final String noteUrl = "https://api.ldjam.com/" + vx + "/" + note + "/get/" + gameno;
+        final String noteUrl = "https://api.ldjam.com/" + vx + "/" + note + "/getbynode/" + gameno;
         final String nodeUrl = "https://api.ldjam.com/" + vx + "/" + node + "/get/" + gameno;
 
         Log.d("LOAD", noteUrl);
@@ -62,12 +69,16 @@ public class NotificationTimer extends BroadcastReceiver {
                             public void onResponse(JSONObject response) {
                                 try {
                                     boolean newRating = false;
-                                    JSONArray jsonArray = response.getJSONArray(note);
+                                    JSONArray jsonArray = response.getJSONArray("note");
                                     int comments = prefs.getInt("comments", -1);
                                     int newComments = jsonArray.length();
+
+                                    Log.d("NOTIFICATION", "old comments: " + comments);
+                                    Log.d("NOTIFICATION", "new comments: " + newComments);
+
                                     if (newComments > comments)
                                         data.addedComments = newComments - comments;
-                                    Log.d("NOTIF_requests","Note request ran succsessfuly" + data.addedComments);
+                                    Log.d("NOTIF_requests", "Note request ran succsessfuly" + data.addedComments);
                                     addNotification(context.getApplicationContext(), data);
 
                                 } catch (JSONException e) {
@@ -92,10 +103,14 @@ public class NotificationTimer extends BroadcastReceiver {
                                     JSONObject jsonObjecter = jsonArray.getJSONObject(0);
                                     jsonObjecter = jsonObjecter.getJSONObject("magic");
                                     double grade = jsonObjecter.getDouble("grade");
-                                    if (grade > prefs.getFloat("addedGradings", 0)) {
-                                        data.addedGradings = grade - prefs.getFloat("addedGradings",0);
+
+                                    Log.d("NOTIFICATION", "old grade: " + prefs.getFloat("addedGradings", 0));
+                                    Log.d("NOTIFICATION", "new grade: " + grade);
+
+                                    if (grade - prefs.getFloat("addedGradings", 0) > EPSILON) {
+                                        data.addedGradings = grade - prefs.getFloat("addedGradings", 0);
                                     }
-                                    Log.d("NOTIF_requests","Node request ran succsessfuly" + data.addedGradings);
+                                    Log.d("NOTIF_requests", "Node request ran succsessfuly" + data.addedGradings);
                                     addNotification(context.getApplicationContext(), data);
                                 } catch (JSONException e) {
                                     e.printStackTrace();
@@ -110,29 +125,31 @@ public class NotificationTimer extends BroadcastReceiver {
 
         noteRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
         nodeRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
-        Log.d("NOTIF_requests","Requests queued successuly");
+        Log.d("NOTIF_requests", "Requests queued successuly");
 
         queue.add(noteRequest);
         queue.add(nodeRequest);
     }
 
     private void addNotification(Context context, Data data) {
+        createNotificationChannel(context);
+
         String commentText = "", gradeText = "";
         String notifText = "";
         if (data.addedComments > 0)
             commentText = data.addedComments + " new comments";
         if (data.addedGradings > 0)
             gradeText = data.addedGradings + " new ratings";
-        Log.d("NOTIFICATION","" + System.currentTimeMillis());
-        Log.d("NOTIFICATION","NOTIF: " + commentText + gradeText);
+        Log.d("NOTIFICATION", "" + System.currentTimeMillis());
+        Log.d("NOTIFICATION", "NOTIF: " + commentText + gradeText);
 
         if (commentText.equals("") && gradeText.equals(""))
             return;
-        else if(!commentText.equals("") && !gradeText.equals(""))
-            notifText = commentText +" & " + gradeText + " received!";
+        else if (!commentText.equals("") && !gradeText.equals(""))
+            notifText = commentText + " & " + gradeText + " received!";
         else notifText = commentText + gradeText + " received!";
 
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setContentTitle("Updates on your LD entry")
                 .setContentText(notifText)
                 .setSmallIcon(R.drawable.ic_notif)
@@ -150,11 +167,26 @@ public class NotificationTimer extends BroadcastReceiver {
                         intent,
                         PendingIntent.FLAG_ONE_SHOT);
         notificationBuilder.setContentIntent(resultPendingIntent);
-        NotificationManager manager = (NotificationManager) context.
+        /*NotificationManager manager = (NotificationManager) context.
                 getSystemService(
-                        Context.NOTIFICATION_SERVICE);
-        manager.notify(234,notificationBuilder.build());
+                        Context.NOTIFICATION_SERVICE);*/
+        NotificationManagerCompat manager = NotificationManagerCompat.from(context);
+        manager.notify(234, notificationBuilder.build());
 
+    }
+
+    private void createNotificationChannel(Context context) {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = context.getString(R.string.channel_name);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 
     class Data {
