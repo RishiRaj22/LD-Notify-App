@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 /**
  * @author Rishi Raj
@@ -18,8 +17,8 @@ public class RefreshNotificationsReciever extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         SharedPreferences prefs = context.getSharedPreferences("data", Context.MODE_PRIVATE);
 
-        int gameno = prefs.getInt("gameno",-1);
-        if(gameno == -1)
+        int gameno = prefs.getInt("gameno", -1);
+        if (gameno == -1)
             return;
 
         AlarmManager alarmManager = (AlarmManager)

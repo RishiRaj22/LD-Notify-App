@@ -1,20 +1,13 @@
 package engineering.reverse.ludumcomments;
 
 import android.app.AlarmManager;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Debug;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -23,8 +16,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.RequestQueue;
@@ -63,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<CommentData> commentDatas;
     private RequestQueue queue;
 
-    private final String vx="vx", node="node2", note="comment";
+    private final String vx = "vx", node = "node2", note = "comment";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -246,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
                                                 "Rating: " + String.valueOf(grade).concat(" !"));
                                     } else
                                         rating.setText(
-                                                "Rating: " + String.valueOf(grade));
+                                                "Rating: " + grade);
                                     progressDialog.dismiss();
                                 } catch (JSONException e) {
                                     e.printStackTrace();
@@ -290,78 +281,78 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         final String relativeLink = link.substring(pos);
-                String root;
-              final SharedPreferences.Editor editor = prefs.edit();
-               root = "https://api.ldjam.com/" + vx + "/node/walk/1";
+        String root;
+        final SharedPreferences.Editor editor = prefs.edit();
+        root = "https://api.ldjam.com/" + vx + "/node/walk/1";
 
-                int lenRel = relativeLink.length();
-                String nodeLink = null;
+        int lenRel = relativeLink.length();
+        String nodeLink = null;
 
-                Log.d("VOLLEY_REQ", relativeLink + " Length: " + lenRel);
-                nodeLink = root + relativeLink;
+        Log.d("VOLLEY_REQ", relativeLink + " Length: " + lenRel);
+        nodeLink = root + relativeLink;
 
-                Log.d("VOLLEY_REQ", "Link " + nodeLink);
-                JsonObjectRequest gameNoRequest =
-                        new JsonObjectRequest(
-                                nodeLink,
-                                null,
-                                new Response.Listener<JSONObject>() {
-                                    @Override
-                                    public void onResponse(JSONObject response) {
-                                        try {
-                                            int status = response.getInt("status");
-                                            if (status != 200) {
-                                                Log.d("VOLLEY_REQ", "Status is not 200");
-                                                return;
-                                            }
-                                            Log.d("VOLLEY_REQ", response.toString());
-                                            Log.d("VOLLEY_REQ", "Status: 200");
+        Log.d("VOLLEY_REQ", "Link " + nodeLink);
+        JsonObjectRequest gameNoRequest =
+                new JsonObjectRequest(
+                        nodeLink,
+                        null,
+                        new Response.Listener<JSONObject>() {
+                            @Override
+                            public void onResponse(JSONObject response) {
+                                try {
+                                    int status = response.getInt("status");
+                                    if (status != 200) {
+                                        Log.d("VOLLEY_REQ", "Status is not 200");
+                                        return;
+                                    }
+                                    Log.d("VOLLEY_REQ", response.toString());
+                                    Log.d("VOLLEY_REQ", "Status: 200");
 
-                                            int gameno = response.getInt("node");
-                                            editor.putInt("gameno", gameno);
-                                            editor.putString("link", link);
-                                            editor.apply();
-                                            AlarmManager alarmManager = (AlarmManager)
-                                                    getApplicationContext().
-                                                            getSystemService(ALARM_SERVICE);
-                                            PendingIntent pendingIntent = PendingIntent
-                                                    .getBroadcast(
+                                    int gameno = response.getInt("node");
+                                    editor.putInt("gameno", gameno);
+                                    editor.putString("link", link);
+                                    editor.apply();
+                                    AlarmManager alarmManager = (AlarmManager)
+                                            getApplicationContext().
+                                                    getSystemService(ALARM_SERVICE);
+                                    PendingIntent pendingIntent = PendingIntent
+                                            .getBroadcast(
+                                                    MainActivity.this,
+                                                    112,
+                                                    new Intent(
                                                             MainActivity.this,
-                                                            112,
-                                                            new Intent(
-                                                                    MainActivity.this,
-                                                                    NotificationTimer.class),
-                                                            PendingIntent.FLAG_UPDATE_CURRENT);
-                                            alarmManager.setRepeating(
-                                                    AlarmManager.RTC_WAKEUP,
-                                                    System.currentTimeMillis(),
-                                                    1000 * 60 * 10,
-                                                    pendingIntent);
+                                                            NotificationTimer.class),
+                                                    PendingIntent.FLAG_UPDATE_CURRENT);
+                                    alarmManager.setRepeating(
+                                            AlarmManager.RTC_WAKEUP,
+                                            System.currentTimeMillis(),
+                                            1000 * 60 * 10,
+                                            pendingIntent);
 
-                                            progressDialog.dismiss();
-                                            load();
-                                        } catch (JSONException e) {
-                                            //// TODO: 07-08-2017 Check URL or raise ticket
-                                            progressDialog.dismiss();
-                                            e.printStackTrace();
-                                            editor.apply();
-                                        }
-                                    }
-                                },
-                                new Response.ErrorListener() {
-                                    @Override
-                                    public void onErrorResponse(VolleyError error) {
-                                        progressDialog.dismiss();
-                                        //// TODO: 07-08-2017 Check URL or raise ticket
-                                        if (error == null)
-                                            Log.d("RESPONSE_ENTRIES", "Fatal error");
-                                        Log.d("RESPONSE_ENTRIES", error.getMessage());
-                                    }
+                                    progressDialog.dismiss();
+                                    load();
+                                } catch (JSONException e) {
+                                    //// TODO: 07-08-2017 Check URL or raise ticket
+                                    progressDialog.dismiss();
+                                    e.printStackTrace();
+                                    editor.apply();
                                 }
-                        );
+                            }
+                        },
+                        new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                progressDialog.dismiss();
+                                //// TODO: 07-08-2017 Check URL or raise ticket
+                                if (error == null)
+                                    Log.d("RESPONSE_ENTRIES", "Fatal error");
+                                Log.d("RESPONSE_ENTRIES", error.getMessage());
+                            }
+                        }
+                );
 
-                gameNoRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
-                queue.add(gameNoRequest);
+        gameNoRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
+        queue.add(gameNoRequest);
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);

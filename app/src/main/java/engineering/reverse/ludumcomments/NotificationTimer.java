@@ -32,12 +32,12 @@ import java.util.ArrayList;
  */
 
 public class NotificationTimer extends BroadcastReceiver {
-    private final float EPSILON=0.00001f; //account for floating point errors when subtracting addedratings
-    private final String CHANNEL_ID="ld_notify_channel"; //notification channel
+    private final float EPSILON = 0.00001f; //account for floating point errors when subtracting addedratings
+    private final String CHANNEL_ID = "ld_notify_channel"; //notification channel
 
     @Override
     public void onReceive(final Context context, Intent intent) {
-        Log.d("NOTIFICATION","timer called");
+        Log.d("NOTIFICATION", "timer called");
         RequestQueue queue;
         queue = Volley.newRequestQueue(context.getApplicationContext());
         final ArrayList<CommentData> commentDatas = new ArrayList<CommentData>();
@@ -73,12 +73,12 @@ public class NotificationTimer extends BroadcastReceiver {
                                     int comments = prefs.getInt("comments", -1);
                                     int newComments = jsonArray.length();
 
-                                    Log.d("NOTIFICATION", "old comments: "+comments);
-                                    Log.d("NOTIFICATION", "new comments: "+newComments);
+                                    Log.d("NOTIFICATION", "old comments: " + comments);
+                                    Log.d("NOTIFICATION", "new comments: " + newComments);
 
                                     if (newComments > comments)
                                         data.addedComments = newComments - comments;
-                                    Log.d("NOTIF_requests","Note request ran succsessfuly" + data.addedComments);
+                                    Log.d("NOTIF_requests", "Note request ran succsessfuly" + data.addedComments);
                                     addNotification(context.getApplicationContext(), data);
 
                                 } catch (JSONException e) {
@@ -104,13 +104,13 @@ public class NotificationTimer extends BroadcastReceiver {
                                     jsonObjecter = jsonObjecter.getJSONObject("magic");
                                     double grade = jsonObjecter.getDouble("grade");
 
-                                    Log.d("NOTIFICATION", "old grade: "+prefs.getFloat("addedGradings", 0));
-                                    Log.d("NOTIFICATION", "new grade: "+grade);
+                                    Log.d("NOTIFICATION", "old grade: " + prefs.getFloat("addedGradings", 0));
+                                    Log.d("NOTIFICATION", "new grade: " + grade);
 
-                                    if (grade - prefs.getFloat("addedGradings", 0)> EPSILON) {
-                                        data.addedGradings = grade - prefs.getFloat("addedGradings",0);
+                                    if (grade - prefs.getFloat("addedGradings", 0) > EPSILON) {
+                                        data.addedGradings = grade - prefs.getFloat("addedGradings", 0);
                                     }
-                                    Log.d("NOTIF_requests","Node request ran succsessfuly" + data.addedGradings);
+                                    Log.d("NOTIF_requests", "Node request ran succsessfuly" + data.addedGradings);
                                     addNotification(context.getApplicationContext(), data);
                                 } catch (JSONException e) {
                                     e.printStackTrace();
@@ -125,7 +125,7 @@ public class NotificationTimer extends BroadcastReceiver {
 
         noteRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
         nodeRequest.setRetryPolicy(VolleyUtils.getRetryPolicy());
-        Log.d("NOTIF_requests","Requests queued successuly");
+        Log.d("NOTIF_requests", "Requests queued successuly");
 
         queue.add(noteRequest);
         queue.add(nodeRequest);
@@ -140,13 +140,13 @@ public class NotificationTimer extends BroadcastReceiver {
             commentText = data.addedComments + " new comments";
         if (data.addedGradings > 0)
             gradeText = data.addedGradings + " new ratings";
-        Log.d("NOTIFICATION","" + System.currentTimeMillis());
-        Log.d("NOTIFICATION","NOTIF: " + commentText + gradeText);
+        Log.d("NOTIFICATION", "" + System.currentTimeMillis());
+        Log.d("NOTIFICATION", "NOTIF: " + commentText + gradeText);
 
         if (commentText.equals("") && gradeText.equals(""))
             return;
-        else if(!commentText.equals("") && !gradeText.equals(""))
-            notifText = commentText +" & " + gradeText + " received!";
+        else if (!commentText.equals("") && !gradeText.equals(""))
+            notifText = commentText + " & " + gradeText + " received!";
         else notifText = commentText + gradeText + " received!";
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, CHANNEL_ID)
@@ -170,8 +170,8 @@ public class NotificationTimer extends BroadcastReceiver {
         /*NotificationManager manager = (NotificationManager) context.
                 getSystemService(
                         Context.NOTIFICATION_SERVICE);*/
-        NotificationManagerCompat manager=NotificationManagerCompat.from(context);
-        manager.notify(234,notificationBuilder.build());
+        NotificationManagerCompat manager = NotificationManagerCompat.from(context);
+        manager.notify(234, notificationBuilder.build());
 
     }
 
